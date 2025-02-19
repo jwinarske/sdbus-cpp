@@ -1,0 +1,136 @@
+<node name="/org/debian/apt">
+    <interface name="org.freedesktop.DBus.Introspectable">
+        <method name="Introspect">
+            <arg direction="out" type="s"/>
+        </method>
+    </interface>
+    <interface name="org.freedesktop.DBus.Properties">
+        <signal name="PropertiesChanged">
+            <arg type="s" name="interface"/>
+            <arg type="a{sv}" name="changed_properties"/>
+            <arg type="as" name="invalidated_properties"/>
+        </signal>
+        <method name="Set">
+            <arg direction="in" type="s" name="iface"/>
+            <arg direction="in" type="s" name="name"/>
+            <arg direction="in" type="v" name="value"/>
+        </method>
+        <method name="GetAll">
+            <arg direction="in" type="s" name="iface"/>
+            <arg direction="out" type="a{sv}"/>
+        </method>
+        <method name="Get">
+            <arg direction="in" type="s" name="iface"/>
+            <arg direction="in" type="s" name="property"/>
+            <arg direction="out" type="v"/>
+        </method>
+    </interface>
+    <interface name="org.debian.apt">
+        <signal name="PropertyChanged">
+            <arg type="s" name="property"/>
+            <arg type="v" name="value"/>
+        </signal>
+        <signal name="ActiveTransactionsChanged">
+            <arg type="s" name="current"/>
+            <arg type="as" name="queued"/>
+        </signal>
+        <method name="FixIncompleteInstall">
+            <arg direction="out" type="s"/>
+        </method>
+        <method name="FixBrokenDepends">
+            <arg direction="out" type="s"/>
+        </method>
+        <method name="UpdateCache">
+            <arg direction="out" type="s"/>
+        </method>
+        <method name="UpdateCachePartially">
+            <arg direction="in" type="s" name="sources_list"/>
+            <arg direction="out" type="s"/>
+        </method>
+        <method name="RemovePackages">
+            <arg direction="in" type="as" name="package_names"/>
+            <arg direction="out" type="s"/>
+        </method>
+        <method name="UpgradeSystem">
+            <arg direction="in" type="b" name="safe_mode"/>
+            <arg direction="out" type="s"/>
+        </method>
+        <method name="CommitPackages">
+            <arg direction="in" type="as" name="install"/>
+            <arg direction="in" type="as" name="reinstall"/>
+            <arg direction="in" type="as" name="remove"/>
+            <arg direction="in" type="as" name="purge"/>
+            <arg direction="in" type="as" name="upgrade"/>
+            <arg direction="in" type="as" name="downgrade"/>
+            <arg direction="out" type="s"/>
+        </method>
+        <method name="InstallPackages">
+            <arg direction="in" type="as" name="package_names"/>
+            <arg direction="out" type="s"/>
+        </method>
+        <method name="UpgradePackages">
+            <arg direction="in" type="as" name="package_names"/>
+            <arg direction="out" type="s"/>
+        </method>
+        <method name="AddVendorKeyFromKeyserver">
+            <arg direction="in" type="s" name="keyid"/>
+            <arg direction="in" type="s" name="keyserver"/>
+            <arg direction="out" type="s"/>
+        </method>
+        <method name="AddVendorKeyFromFile">
+            <arg direction="in" type="s" name="path"/>
+            <arg direction="out" type="s"/>
+        </method>
+        <method name="RemoveVendorKey">
+            <arg direction="in" type="s" name="fingerprint"/>
+            <arg direction="out" type="s"/>
+        </method>
+        <method name="InstallFile">
+            <arg direction="in" type="s" name="path"/>
+            <arg direction="in" type="b" name="force"/>
+            <arg direction="out" type="s"/>
+        </method>
+        <method name="Clean">
+            <arg direction="out" type="s"/>
+        </method>
+        <method name="Reconfigure">
+            <arg direction="in" type="as" name="packages"/>
+            <arg direction="in" type="s" name="priority"/>
+            <arg direction="out" type="s"/>
+        </method>
+        <method name="AddRepository">
+            <arg direction="in" type="s" name="src_type"/>
+            <arg direction="in" type="s" name="uri"/>
+            <arg direction="in" type="s" name="dist"/>
+            <arg direction="in" type="as" name="comps"/>
+            <arg direction="in" type="s" name="comment"/>
+            <arg direction="in" type="s" name="sourcesfile"/>
+            <arg direction="out" type="s"/>
+        </method>
+        <method name="EnableDistroComponent">
+            <arg direction="in" type="s" name="component"/>
+            <arg direction="out" type="s"/>
+        </method>
+        <method name="GetTrustedVendorKeys">
+            <arg direction="out" type="as"/>
+        </method>
+        <method name="GetActiveTransactions">
+            <arg direction="out" type="s"/>
+            <arg direction="out" type="as"/>
+        </method>
+        <method name="Quit">
+        </method>
+        <method name="AddLicenseKey">
+            <arg direction="in" type="s" name="pkg_name"/>
+            <arg direction="in" type="s" name="json_token"/>
+            <arg direction="in" type="s" name="server_name"/>
+            <arg direction="out" type="s"/>
+        </method>
+        <property name="AutoUpdateInterval" access="read" type="i"/>
+        <property name="AutoDownload" access="read" type="b"/>
+        <property name="AutoCleanInterval" access="read" type="i"/>
+        <property name="UnattendedUpgrade" access="read" type="i"/>
+        <property name="PopConParticipation" access="read" type="b"/>
+        <property name="RebootRequired" access="read" type="b"/>
+    </interface>
+</node>
