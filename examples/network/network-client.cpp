@@ -1,28 +1,28 @@
 #include "network-client.h"
 
-NetworkClient::NetworkClient()
-    : connection(sdbus::createSystemBusConnection())
-      , proxy(sdbus::createProxy(*connection, sdbus::ServiceName("org.freedesktop.NetworkManager"), sdbus::ObjectPath("/org/freedesktop/NetworkManager")))
+NetworkClient::NetworkClient(sdbus::IConnection& connection)
+    : connection_(connection)
+      , proxy_(sdbus::createProxy(connection, sdbus::ServiceName("org.freedesktop.NetworkManager"), sdbus::ObjectPath("/org/freedesktop/NetworkManager")))
 {
 }
 
 NetworkClient::~NetworkClient()
 {
-    proxy->unregister();
+    proxy_->unregister();
 }
 
 std::vector<sdbus::ObjectPath> NetworkClient::getActiveConnections() const
 {
     sdbus::Variant activeConnection;
-    proxy->callMethod("Get").onInterface("org.freedesktop.DBus.Properties")
-         .withArguments("org.freedesktop.NetworkManager", "ActiveConnections")
-         .storeResultsTo(activeConnection);
+    proxy_->callMethod("Get").onInterface("org.freedesktop.DBus.Properties")
+          .withArguments("org.freedesktop.NetworkManager", "ActiveConnections")
+          .storeResultsTo(activeConnection);
     return activeConnection.get<std::vector<sdbus::ObjectPath>>();
 }
 
 std::vector<sdbus::ObjectPath> NetworkClient::getDevices(const sdbus::ObjectPath& activeConnectionPath) const
 {
-    const auto activeConnectionProxy = sdbus::createProxy(*connection,
+    const auto activeConnectionProxy = sdbus::createProxy(connection_,
                                                           sdbus::ServiceName("org.freedesktop.NetworkManager"),
                                                           activeConnectionPath);
     sdbus::Variant stateVariant;
@@ -33,7 +33,6 @@ std::vector<sdbus::ObjectPath> NetworkClient::getDevices(const sdbus::ObjectPath
     return state;
 }
 
-
 void NetworkClient::print_properties(const std::map<sdbus::MemberName, sdbus::Variant>& props)
 {
     for (auto& [key, value] : props)
@@ -43,12 +42,12 @@ void NetworkClient::print_properties(const std::map<sdbus::MemberName, sdbus::Va
         if (type == "u")
         {
             const auto v = value.get<std::uint32_t>();
-            std::cout << "\t" << v << std::endl;
+            std::cout << v << std::endl;
         }
         else if (type == "d")
         {
             const auto v = value.get<double>();
-            std::cout << "\t" << v << std::endl;
+            std::cout << v << std::endl;
         }
         else if (type == "o")
         {
@@ -57,8 +56,8 @@ void NetworkClient::print_properties(const std::map<sdbus::MemberName, sdbus::Va
         }
         else if (type == "ao")
         {
-            auto object_paths = value.get<std::vector<sdbus::ObjectPath>>();
-            for (const auto& object_path : object_paths)
+            for (auto object_paths = value.get<std::vector<sdbus::ObjectPath>>(); const auto& object_path :
+                 object_paths)
             {
                 std::cout << object_path << std::endl;
             }
@@ -66,27 +65,27 @@ void NetworkClient::print_properties(const std::map<sdbus::MemberName, sdbus::Va
         else if (type == "i")
         {
             const auto v = value.get<std::int32_t>();
-            std::cout << "\t" << v << std::endl;
+            std::cout << v << std::endl;
         }
         else if (type == "b")
         {
             const auto v = value.get<bool>();
-            std::cout << (v ? "\tTrue" : "\tFalse") << std::endl;
+            std::cout << (v ? "True" : "False") << std::endl;
         }
         else if (type == "s")
         {
             const auto v = value.get<std::string>();
-            std::cout << (v.empty() ? "\t\"\"" : v) << std::endl;
+            std::cout << (v.empty() ? "\"\"" : v) << std::endl;
         }
         else if (type == "x")
         {
             const auto v = value.get<std::int64_t>();
-            std::cout << "\t" << v << std::endl;
+            std::cout << v << std::endl;
         }
         else if (type == "t")
         {
             const auto v = value.get<std::uint64_t>();
-            std::cout << "\t" << v << std::endl;
+            std::cout << v << std::endl;
         }
         else if (type == "as")
         {
@@ -94,9 +93,9 @@ void NetworkClient::print_properties(const std::map<sdbus::MemberName, sdbus::Va
             const auto v = value.get<std::vector<std::string>>();
             for (const auto& s : v)
             {
-                std::cout << "\t\t" << s << std::endl;
+                std::cout << "\t" << s << std::endl;
             }
-            if (v.empty()) std::cout << "\t\t" << "\"\"" << std::endl;
+            if (v.empty()) std::cout << "\t" << "\"\"" << std::endl;
         }
         else if (type == "au")
         {
@@ -104,9 +103,9 @@ void NetworkClient::print_properties(const std::map<sdbus::MemberName, sdbus::Va
             const auto v = value.get<std::vector<std::uint32_t>>();
             for (const auto& s : v)
             {
-                std::cout << "\t\t" << s << std::endl;
+                std::cout << "\t" << s << std::endl;
             }
-            if (v.empty()) std::cout << "\t\t" << "\"\"" << std::endl;
+            if (v.empty()) std::cout << "\t" << "\"\"" << std::endl;
         }
         else if (type == "aau")
         {
@@ -116,10 +115,10 @@ void NetworkClient::print_properties(const std::map<sdbus::MemberName, sdbus::Va
             {
                 for (const auto& address : it)
                 {
-                    std::cout << "\t\t" << address << std::endl;
+                    std::cout << "\t" << address << std::endl;
                 }
             }
-            if (v.empty()) std::cout << "\t\t" << "\"\"" << std::endl;
+            if (v.empty()) std::cout << "\t" << "\"\"" << std::endl;
         }
         else if (type == "aay")
         {
@@ -129,10 +128,10 @@ void NetworkClient::print_properties(const std::map<sdbus::MemberName, sdbus::Va
             {
                 for (const auto& b : it)
                 {
-                    std::cout << "\t\t" << b << std::endl;
+                    std::cout << "\t" << b << std::endl;
                 }
             }
-            if (v.empty()) std::cout << "\t\t" << "\"\"" << std::endl;
+            if (v.empty()) std::cout << "\t" << "\"\"" << std::endl;
         }
         else if (type == "a{sv}")
         {
@@ -142,7 +141,7 @@ void NetworkClient::print_properties(const std::map<sdbus::MemberName, sdbus::Va
             {
                 for (const auto& [key, value] : it)
                 {
-                    std::cout << "\t\t" << key << ": ";
+                    std::cout << "\t" << key << ": ";
                     if (std::string t = value.peekValueType(); t == "s")
                     {
                         std::cout << value.get<std::string>() << std::endl;
@@ -171,19 +170,15 @@ void NetworkClient::print_properties(const std::map<sdbus::MemberName, sdbus::Va
                     const auto& uint_value = std::get<1>(tuple);
                     const auto& array2 = std::get<2>(tuple);
 
-                    std::cout << "\t\tArray1: ";
+                    std::cout << "\t";
                     for (const auto& b : array1)
                     {
-                        std::cout << static_cast<int>(b) << " ";
+                        std::cout << static_cast<int>(b);
                     }
-                    std::cout << std::endl;
-
-                    std::cout << "\t\tUint32: " << uint_value << std::endl;
-
-                    std::cout << "\t\tArray2: ";
+                    std::cout << ", " << uint_value << ", ";
                     for (const auto& b : array2)
                     {
-                        std::cout << static_cast<int>(b) << " ";
+                        std::cout << static_cast<int>(b);
                     }
                     std::cout << std::endl;
                 }
@@ -208,23 +203,17 @@ void NetworkClient::print_properties(const std::map<sdbus::MemberName, sdbus::Va
                     const auto& array2 = std::get<2>(tuple);
                     const auto& uint_value2 = std::get<3>(tuple);
 
-                    std::cout << "\t\tArray1: ";
+                    std::cout << "\t";
                     for (const auto& b : array1)
                     {
-                        std::cout << static_cast<int>(b) << " ";
+                        std::cout << static_cast<int>(b);
                     }
-                    std::cout << std::endl;
-
-                    std::cout << "\t\tUint32_1: " << uint_value1 << std::endl;
-
-                    std::cout << "\t\tArray2: ";
+                    std::cout << ", " << uint_value1 << ", ";
                     for (const auto& b : array2)
                     {
-                        std::cout << static_cast<int>(b) << " ";
+                        std::cout << static_cast<int>(b);
                     }
-                    std::cout << std::endl;
-
-                    std::cout << "\t\tUint32_2: " << uint_value2 << std::endl;
+                    std::cout << ", " << uint_value2 << std::endl;
                 }
             }
             catch (const sdbus::Error& e)
@@ -241,9 +230,8 @@ void NetworkClient::print_properties(const std::map<sdbus::MemberName, sdbus::Va
             {
                 for (const auto& [key, value] : arg_a_sv)
                 {
-                    std::cout << "\t\t" << key << ": ";
-                    std::string t = value.peekValueType();
-                    if (t == "s")
+                    std::cout << "\t" << key << ": ";
+                    if (std::string t = value.peekValueType(); t == "s")
                     {
                         std::cout << value.get<std::string>() << std::endl;
                     }

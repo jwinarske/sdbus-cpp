@@ -15,10 +15,11 @@ static constexpr char kIp4Config[] = "org.freedesktop.NetworkManager.IP4Config";
 static constexpr char kIp6Config[] = "org.freedesktop.NetworkManager.IP6Config";
 static constexpr char kAccessPoint[] = "org.freedesktop.NetworkManager.AccessPoint";
 
+
 class NetworkClient
 {
 public:
-    NetworkClient();
+    explicit NetworkClient(sdbus::IConnection& connection);
 
     ~NetworkClient();
 
@@ -55,13 +56,13 @@ public:
         return result;
     }
 
-    void print_properties(const std::map<sdbus::MemberName, sdbus::Variant>& props);
+    static void print_properties(const std::map<sdbus::MemberName, sdbus::Variant>& props);
 
     template <typename ValueType>
     ValueType get_property(const sdbus::ObjectPath& activeConnectionPath, const std::string& interface_name,
                            const std::string& property) const
     {
-        const auto activeConnectionProxy = sdbus::createProxy(*connection,
+        const auto activeConnectionProxy = sdbus::createProxy(connection_,
                                                               sdbus::ServiceName("org.freedesktop.NetworkManager"),
                                                               activeConnectionPath);
         sdbus::Variant stateVariant;
@@ -77,7 +78,7 @@ public:
                                                const std::string& bus_name,
                                                const std::string& interface_name) const
     {
-        const auto activeConnectionProxy = sdbus::createProxy(*connection,
+        const auto activeConnectionProxy = sdbus::createProxy(connection_,
                                                               sdbus::ServiceName(bus_name),
                                                               activeConnectionPath);
         ValueType state;
@@ -88,8 +89,8 @@ public:
     }
 
 private:
-    std::unique_ptr<sdbus::IConnection> connection;
-    std::unique_ptr<sdbus::IProxy> proxy;
+    sdbus::IConnection& connection_;
+    std::unique_ptr<sdbus::IProxy> proxy_;
 };
 
 #endif // NETWORK_CLIENT_H
